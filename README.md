@@ -1,1 +1,0 @@
-# e6156-users-service
