@@ -1,4 +1,4 @@
-import os
+import os, string, random
 from flask import Flask, request, render_template, g, redirect, session, Response
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import create_engine
@@ -40,9 +40,6 @@ def teardown_request(exception):
     except Exception:
         pass
 
-@app.route("/")
-def hello_world():
-    return "<p>Hello, World!</p>"
 
 @app.route('/login', methods=["POST"])
 def login():
@@ -56,8 +53,14 @@ def login():
         ).fetchone()
         if query_result is not None:
             if check_password_hash(query_result[4], password):
-                session.clear()
+                session_signature = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(128))
+                g.conn.execute(
+                    'UPDATE users SET session_cookie=%s WHERE user_name=%s',
+                    session_signature,
+                    username
+                )
                 session['user'] = username
+                session['signature'] = session_signature
                 return Response("Authenticated", 200)
             else:
                 return Response("Password Mismatch", 401)
@@ -89,7 +92,36 @@ def signup():
 @app.route('/logout', methods=["POST"])
 def logout():
     session.clear()
+    g.conn.execute(
+        'UPDATE users SET session_cookie=%s WHERE user_name=%s',
+        '',
+        request.form.get("username")
+    )
     return Response("OK", 200)
+
+
+@app.route('/user-metadata', methods=["GET"])
+def get_user_metadata():
+    username = request.form.get("username")
+    signature = request.form.get("session_cookie")
+    key = request.form.get("key")
+    query_result = g.conn.execute(
+            'SELECT * FROM users WHERE user_name=%s AND session_cookie=%s',
+            username,
+            signature
+        ).fetchone()
+    if query_result is not None:
+        try:
+            value = query_result = g.conn.execute(
+                'SELECT value FROM user_metadata WHERE belongs_to=%s AND key=%s',
+                username,
+                key
+            ).fetchone()
+            return value
+        except Exception:
+            return Response("Key Does Not Exist", 401)
+    else:
+        return Response("Unauthorized", 401)
 
 if __name__ == "__main__":
 
