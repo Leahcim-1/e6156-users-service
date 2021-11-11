@@ -1,5 +1,5 @@
 import os, string, random
-from flask import Flask, request, render_template, g, redirect, session, Response
+from flask import Flask, request, g, session, Response
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
