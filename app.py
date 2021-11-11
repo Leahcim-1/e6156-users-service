@@ -44,7 +44,7 @@ def teardown_request(exception):
 def hello_world():
     return "<p>Hello, World!</p>"
 
-@app.route('/login', methods=["GET", "POST"])
+@app.route('/login', methods=["POST"])
 def login():
     session.clear()
     if request.method == "POST":
@@ -86,10 +86,10 @@ def signup():
         return Response("Method Not Allowed", 405)
 
 
-@app.route('/logout', methods=["GET", "POST"])
+@app.route('/logout', methods=["POST"])
 def logout():
     session.clear()
-    return redirect('/login')
+    return Response("OK", 200)
 
 if __name__ == "__main__":
 
