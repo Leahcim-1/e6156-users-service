@@ -20,9 +20,12 @@ exports.handler = async (event, context, callback) => {
         await dynamoDBClient.put({
             TableName: 'users',
             Item: item,
-            ConditionExpression: 'attribute_not_exists(user_id)'
+            ConditionExpression: 'attribute_not_exists(username)'
         }).promise()
-        body = "User with userId " + item.userId + " created for " + item.username
+        body = {
+            userId: item.userId,
+            username: item.username
+        }
     } catch (err) {
         statusCode = 400
         body = err
