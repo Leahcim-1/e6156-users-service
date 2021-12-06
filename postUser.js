@@ -11,16 +11,16 @@ exports.handler = async (event, context, callback) => {
     const headers = {
         "Content-Type": "application/json"
     }
+    const requestBody = JSON.parse(event.body)
     let item = {
         userId: uuid.v4(),
-        username: event.queryStringParameters.username,
+        username: requestBody.username,
         googleAuthId: ""
     }
     try {
         await dynamoDBClient.put({
             TableName: 'users',
-            Item: item,
-            ConditionExpression: 'attribute_not_exists(username)'
+            Item: item
         }).promise()
         body = {
             userId: item.userId,

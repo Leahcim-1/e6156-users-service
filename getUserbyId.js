@@ -7,18 +7,30 @@ const dynamoDBClient = new aws.DynamoDB.DocumentClient({
 exports.handler = async (event, context, callback) => {
     let body
     let statusCode = 200
+    
+    const requestBody = JSON.parse(event.body)
     const headers = {
         "Content-Type": "application/json"
     }
-    var user = await dynamoDBClient.get({
-        TableName: "users",
-        Key: {
-            userId: event.queryStringParameters.userId
-        },
-    })
-    .promise()
+    try {
+        var user = await dynamoDBClient.get({
+            TableName: "users",
+            Key: {
+                userId: requestBody.userId
+            },
+        })
+        .promise()
+        body = user.Item
+    } catch (err) {
+        statusCode = 400
+        body = err
+    } finally {
+        body = JSON.stringify(body)
+    }
     return {
-        user
+        statusCode,
+        body,
+        headers
     }
 }
 
